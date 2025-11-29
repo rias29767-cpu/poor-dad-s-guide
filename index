@@ -120,20 +120,28 @@
         }
 
         .password-wrapper {
-            position: relative;
-            margin-bottom: 15px;
-        }
+    position: relative;
+    margin-bottom: 15px;
+}
 
-        .toggle-password {
-            position: absolute;
-            right: 12px;
-            top: 12px;
-            background: none;
-            border: none;
-            cursor: pointer;
-            color: #666;
-            font-size: 18px;
-        }
+.toggle-password {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #999;
+    font-size: 16px;
+    padding: 0;
+    transition: color 0.3s;
+}
+
+.toggle-password:hover {
+    color: #2185d0;
+}
+
 
         .modal-content button {
             padding: 10px 20px;
@@ -904,14 +912,3 @@
     </script>
 </body>
 </html>
-
-print("✅ Updated HTML with all requested changes:")
-print("\n✓ Removed email & name fields from mailbox (privacy)")
-print("✓ Added show password toggle (👁️ button)")
-print("✓ Changed 'Unlock' to 'Admin Control'")
-print("✓ Added 'Sort A-Z' button in Admin Panel for alphabetical sorting")
-print("\nChanges made:")
-print("1. Mailbox now only asks for: Term + Why")
-print("2. Password input has toggle visibility button")
-print("3. Header button now says '🔐 Admin Control'")
-print("4. Admin Panel has '📊 Sort A-Z' button that sorts terms alphabetically")
