@@ -1,5 +1,4 @@
-# Create an updated version with password-protected admin panel
-updated_html = '''<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -32,7 +31,6 @@ updated_html = '''<!DOCTYPE html>
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             padding: 30px;
-            text-align: center;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -119,6 +117,22 @@ updated_html = '''<!DOCTYPE html>
             border-radius: 6px;
             margin-bottom: 15px;
             font-size: 14px;
+        }
+
+        .password-wrapper {
+            position: relative;
+            margin-bottom: 15px;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 12px;
+            top: 12px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #666;
+            font-size: 18px;
         }
 
         .modal-content button {
@@ -277,6 +291,32 @@ updated_html = '''<!DOCTYPE html>
             margin: 20px 0;
         }
 
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .admin-header h2 {
+            margin: 0;
+        }
+
+        .sort-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.3s;
+        }
+
+        .sort-btn:hover {
+            background: #5568d3;
+        }
+
         .stats {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -433,6 +473,10 @@ updated_html = '''<!DOCTYPE html>
                 flex-direction: column;
                 gap: 10px;
             }
+            .admin-header {
+                flex-direction: column;
+                gap: 10px;
+            }
         }
     </style>
 </head>
@@ -443,14 +487,17 @@ updated_html = '''<!DOCTYPE html>
                 <h1>📚 Finance Dictionary</h1>
                 <p>Empowering financial literacy, one term at a time</p>
             </div>
-            <button class="unlock-btn" onclick="openPasswordModal()" id="unlockBtn">🔓 Unlock</button>
+            <button class="unlock-btn" onclick="openPasswordModal()" id="unlockBtn">🔐 Admin Control</button>
             <button class="logout-btn" onclick="logout()" id="logoutBtn" style="display: none;">Logout</button>
         </header>
 
         <div class="modal" id="passwordModal">
             <div class="modal-content">
                 <h2>🔐 Admin Access</h2>
-                <input type="password" id="passwordInput" placeholder="Enter admin password" onkeypress="handlePasswordKeyPress(event)">
+                <div class="password-wrapper">
+                    <input type="password" id="passwordInput" placeholder="Enter admin password" onkeypress="handlePasswordKeyPress(event)">
+                    <button class="toggle-password" onclick="togglePasswordVisibility()">👁️</button>
+                </div>
                 <button onclick="checkPassword()">Unlock</button>
                 <button class="cancel" onclick="closePasswordModal()">Cancel</button>
             </div>
@@ -485,7 +532,10 @@ updated_html = '''<!DOCTYPE html>
 
         <!-- ADMIN TAB -->
         <div id="admin" class="content">
-            <h2>Manage Finance Terms</h2>
+            <div class="admin-header">
+                <h2>Manage Finance Terms</h2>
+                <button class="sort-btn" onclick="sortTermsAlphabetically()">📊 Sort A-Z</button>
+            </div>
 
             <div id="editIndicator" class="edit-indicator">
                 <strong>✏️ Editing:</strong> <span id="editName"></span>
@@ -540,16 +590,6 @@ updated_html = '''<!DOCTYPE html>
             <p style="color: #666; margin-bottom: 20px;">Friends can request new terms here. You review and add definitions.</p>
 
             <div class="form-group">
-                <label>Your Name *</label>
-                <input type="text" id="mbName" placeholder="Your name">
-            </div>
-
-            <div class="form-group">
-                <label>Your Email *</label>
-                <input type="email" id="mbEmail" placeholder="your.email@example.com">
-            </div>
-
-            <div class="form-group">
                 <label>Term You Want *</label>
                 <input type="text" id="mbTerm" placeholder="e.g., Hedge Fund">
             </div>
@@ -591,11 +631,21 @@ updated_html = '''<!DOCTYPE html>
         function closePasswordModal() {
             document.getElementById('passwordModal').classList.remove('active');
             document.getElementById('passwordInput').value = '';
+            document.getElementById('passwordInput').type = 'password';
         }
 
         function handlePasswordKeyPress(event) {
             if (event.key === 'Enter') {
                 checkPassword();
+            }
+        }
+
+        function togglePasswordVisibility() {
+            const passwordInput = document.getElementById('passwordInput');
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+            } else {
+                passwordInput.type = 'password';
             }
         }
 
@@ -625,6 +675,13 @@ updated_html = '''<!DOCTYPE html>
             document.getElementById('unlockBtn').style.display = 'inline-block';
             document.getElementById('logoutBtn').style.display = 'none';
             switchTab('browse');
+        }
+
+        function sortTermsAlphabetically() {
+            dictionary.sort((a, b) => a.word.localeCompare(b.word));
+            saveDictionary();
+            renderAdmin();
+            alert('✓ Terms sorted alphabetically!');
         }
 
         // Initialize with sample data
@@ -782,21 +839,17 @@ updated_html = '''<!DOCTYPE html>
         }
 
         function submitRequest() {
-            const name = document.getElementById('mbName').value.trim();
-            const email = document.getElementById('mbEmail').value.trim();
             const term = document.getElementById('mbTerm').value.trim();
             const why = document.getElementById('mbWhy').value.trim();
 
-            if (!name || !email || !term) {
-                alert('Fill required fields!');
+            if (!term) {
+                alert('Please enter a term!');
                 return;
             }
 
-            mailbox.push({ id: Date.now(), name, email, term, why, date: new Date().toLocaleDateString() });
+            mailbox.push({ id: Date.now(), term, why, date: new Date().toLocaleDateString() });
             saveMailbox();
 
-            document.getElementById('mbName').value = '';
-            document.getElementById('mbEmail').value = '';
             document.getElementById('mbTerm').value = '';
             document.getElementById('mbWhy').value = '';
 
@@ -821,7 +874,7 @@ updated_html = '''<!DOCTYPE html>
                         <h3>${m.term}</h3>
                         <button class="btn btn-danger" onclick="deleteRequest(${m.id})">✕</button>
                     </div>
-                    <div class="mailbox-meta">From: ${m.name} (${m.email}) • ${m.date}</div>
+                    <div class="mailbox-meta">📅 ${m.date}</div>
                     ${m.why ? `<div class="mailbox-note"><strong>Why:</strong> ${m.why}</div>` : ''}
                 </div>
             `).join('');
@@ -850,13 +903,15 @@ updated_html = '''<!DOCTYPE html>
         renderMailbox();
     </script>
 </body>
-</html>'''
+</html>
 
-print("✅ Updated HTML with password protection ready!")
-print(f"\nPassword: finance123")
-print(f"\nHow it works:")
-print("1. Friends see: Browse + Mailbox tabs (Admin Panel hidden)")
-print("2. You see: 🔓 Unlock button in top right")
-print("3. Click Unlock, enter 'finance123'")
-print("4. Admin Panel appears + Logout button shows")
-print("5. Click Logout to hide Admin Panel again")
+print("✅ Updated HTML with all requested changes:")
+print("\n✓ Removed email & name fields from mailbox (privacy)")
+print("✓ Added show password toggle (👁️ button)")
+print("✓ Changed 'Unlock' to 'Admin Control'")
+print("✓ Added 'Sort A-Z' button in Admin Panel for alphabetical sorting")
+print("\nChanges made:")
+print("1. Mailbox now only asks for: Term + Why")
+print("2. Password input has toggle visibility button")
+print("3. Header button now says '🔐 Admin Control'")
+print("4. Admin Panel has '📊 Sort A-Z' button that sorts terms alphabetically")
