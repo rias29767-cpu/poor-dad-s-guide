@@ -1,4 +1,5 @@
-<!DOCTYPE html>
+# Create an updated version with password-protected admin panel
+updated_html = '''<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -32,16 +33,116 @@
             color: white;
             padding: 30px;
             text-align: center;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         header h1 {
             font-size: 28px;
-            margin-bottom: 10px;
+            margin-bottom: 0;
+            flex: 1;
+        }
+
+        .unlock-btn {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+
+        .unlock-btn:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .logout-btn {
+            background: #db2828;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+            margin-left: 10px;
+        }
+
+        .logout-btn:hover {
+            background: #ca1010;
         }
 
         header p {
             font-size: 14px;
             opacity: 0.9;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+        }
+
+        .modal-content h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .modal-content input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        .modal-content button {
+            padding: 10px 20px;
+            background: #2185d0;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-right: 10px;
+            transition: all 0.3s;
+        }
+
+        .modal-content button:hover {
+            background: #1678c2;
+        }
+
+        .modal-content button.cancel {
+            background: #ccc;
+            color: #333;
+        }
+
+        .modal-content button.cancel:hover {
+            background: #bbb;
         }
 
         .nav-tabs {
@@ -71,6 +172,10 @@
 
         .nav-tab:hover {
             background: #fff;
+        }
+
+        .nav-tab.hidden {
+            display: none;
         }
 
         .content {
@@ -324,19 +429,36 @@
             .stats {
                 grid-template-columns: 1fr;
             }
+            header {
+                flex-direction: column;
+                gap: 10px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>📚 Finance Dictionary</h1>
-            <p>Empowering financial literacy, one term at a time</p>
+            <div style="flex: 1;">
+                <h1>📚 Finance Dictionary</h1>
+                <p>Empowering financial literacy, one term at a time</p>
+            </div>
+            <button class="unlock-btn" onclick="openPasswordModal()" id="unlockBtn">🔓 Unlock</button>
+            <button class="logout-btn" onclick="logout()" id="logoutBtn" style="display: none;">Logout</button>
         </header>
+
+        <div class="modal" id="passwordModal">
+            <div class="modal-content">
+                <h2>🔐 Admin Access</h2>
+                <input type="password" id="passwordInput" placeholder="Enter admin password" onkeypress="handlePasswordKeyPress(event)">
+                <button onclick="checkPassword()">Unlock</button>
+                <button class="cancel" onclick="closePasswordModal()">Cancel</button>
+            </div>
+        </div>
 
         <div class="nav-tabs">
             <button class="nav-tab active" onclick="switchTab('browse')">Browse</button>
-            <button class="nav-tab" onclick="switchTab('admin')">Admin Panel</button>
+            <button class="nav-tab hidden" id="adminTab" onclick="switchTab('admin')">Admin Panel</button>
             <button class="nav-tab" onclick="switchTab('mailbox')">Mailbox</button>
         </div>
 
@@ -447,9 +569,63 @@
     </div>
 
     <script>
+        const ADMIN_PASSWORD = "finance123";
+        
         let dictionary = JSON.parse(localStorage.getItem('dict')) || [];
         let mailbox = JSON.parse(localStorage.getItem('mail')) || [];
         let editId = null;
+        let isAdminUnlocked = localStorage.getItem('adminUnlocked') === 'true';
+
+        // Initialize admin panel visibility on page load
+        function initializeAdminPanel() {
+            if (isAdminUnlocked) {
+                showAdminPanel();
+            }
+        }
+
+        function openPasswordModal() {
+            document.getElementById('passwordModal').classList.add('active');
+            document.getElementById('passwordInput').focus();
+        }
+
+        function closePasswordModal() {
+            document.getElementById('passwordModal').classList.remove('active');
+            document.getElementById('passwordInput').value = '';
+        }
+
+        function handlePasswordKeyPress(event) {
+            if (event.key === 'Enter') {
+                checkPassword();
+            }
+        }
+
+        function checkPassword() {
+            const password = document.getElementById('passwordInput').value;
+            if (password === ADMIN_PASSWORD) {
+                isAdminUnlocked = true;
+                localStorage.setItem('adminUnlocked', 'true');
+                closePasswordModal();
+                showAdminPanel();
+            } else {
+                alert('Wrong password!');
+                document.getElementById('passwordInput').value = '';
+            }
+        }
+
+        function showAdminPanel() {
+            document.getElementById('adminTab').classList.remove('hidden');
+            document.getElementById('unlockBtn').style.display = 'none';
+            document.getElementById('logoutBtn').style.display = 'inline-block';
+        }
+
+        function logout() {
+            isAdminUnlocked = false;
+            localStorage.setItem('adminUnlocked', 'false');
+            document.getElementById('adminTab').classList.add('hidden');
+            document.getElementById('unlockBtn').style.display = 'inline-block';
+            document.getElementById('logoutBtn').style.display = 'none';
+            switchTab('browse');
+        }
 
         // Initialize with sample data
         if (dictionary.length === 0) {
@@ -484,7 +660,7 @@
 
         function switchTab(tab) {
             document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
-            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.nav-tab:not(.hidden)').forEach(t => t.classList.remove('active'));
             document.getElementById(tab).classList.add('active');
             event.target.classList.add('active');
             if (tab === 'browse') renderBrowse();
@@ -667,9 +843,20 @@
             localStorage.setItem('mail', JSON.stringify(mailbox));
         }
 
+        // Initialize
         document.getElementById('searchInput').addEventListener('input', renderBrowse);
+        initializeAdminPanel();
         renderBrowse();
         renderMailbox();
     </script>
 </body>
-</html>
+</html>'''
+
+print("✅ Updated HTML with password protection ready!")
+print(f"\nPassword: finance123")
+print(f"\nHow it works:")
+print("1. Friends see: Browse + Mailbox tabs (Admin Panel hidden)")
+print("2. You see: 🔓 Unlock button in top right")
+print("3. Click Unlock, enter 'finance123'")
+print("4. Admin Panel appears + Logout button shows")
+print("5. Click Logout to hide Admin Panel again")
